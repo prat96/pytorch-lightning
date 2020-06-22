@@ -2,10 +2,10 @@ Optimization
 ===============
 
 Learning rate scheduling
--------------------------------------
+------------------------
 Every optimizer you use can be paired with any `LearningRateScheduler <https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate>`_.
 
-.. code-block:: python
+.. testcode::
 
    # no LR scheduler
    def configure_optimizers(self):
@@ -13,18 +13,39 @@ Every optimizer you use can be paired with any `LearningRateScheduler <https://p
 
    # Adam + LR scheduler
    def configure_optimizers(self):
-      return [Adam(...)], [ReduceLROnPlateau()]
+      optimizer = Adam(...)
+      scheduler = ReduceLROnPlateau(optimizer, ...)
+      return [optimizer], [scheduler]
 
-   # Two optimziers each with a scheduler
+   # Two optimizers each with a scheduler
    def configure_optimizers(self):
-      return [Adam(...), SGD(...)], [ReduceLROnPlateau(), LambdaLR()]
+      optimizer1 = Adam(...)
+      optimizer2 = SGD(...)
+      scheduler1 = ReduceLROnPlateau(optimizer1, ...)
+      scheduler2 = LambdaLR(optimizer2, ...)
+      return [optimizer1, optimizer2], [scheduler1, scheduler2]
 
+   # Same as above with additional params passed to the first scheduler
+   def configure_optimizers(self):
+      optimizers = [Adam(...), SGD(...)]
+      schedulers = [
+         {
+            'scheduler': ReduceLROnPlateau(optimizers[0], ...),
+            'monitor': 'val_recall', # Default: val_loss
+            'interval': 'epoch',
+            'frequency': 1
+         },
+         LambdaLR(optimizers[1], ...)
+      ]
+      return optimizers, schedulers
+
+----------
 
 Use multiple optimizers (like GANs)
--------------------------------------
+-----------------------------------
 To use multiple optimizers return > 1 optimizers from :meth:`pytorch_lightning.core.LightningModule.configure_optimizers`
 
-.. code-block:: python
+.. testcode::
 
    # one optimizer
    def configure_optimizers(self):
@@ -51,15 +72,16 @@ Lightning will call each optimizer sequentially:
       for scheduler in scheduler:
          scheduler.step()
 
+----------
 
 Step optimizers at arbitrary intervals
-----------------------------------------
+--------------------------------------
 To do more interesting things with your optimizers such as learning rate warm-up or odd scheduling,
 override the :meth:`optimizer_step` function.
 
 For example, here step optimizer A every 2 batches and optimizer B every 4 batches
 
-.. code-block:: python
+.. testcode::
 
     def optimizer_step(self, current_epoch, batch_nb, optimizer, optimizer_i, second_order_closure=None):
         optimizer.step()
@@ -84,7 +106,7 @@ For example, here step optimizer A every 2 batches and optimizer B every 4 batch
 
 Here we add a learning-rate warm up
 
-.. code-block:: python
+.. testcode::
 
     # learning rate warm-up
     def optimizer_step(self, current_epoch, batch_nb, optimizer, optimizer_i, second_order_closure=None):

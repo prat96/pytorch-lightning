@@ -3,7 +3,7 @@ Profiling your training run can help you understand if there are any bottlenecks
 
 
 Built-in checks
-----------------
+---------------
 
 PyTorch Lightning supports profiling standard actions in the training loop out of the box, including:
 
@@ -16,11 +16,11 @@ PyTorch Lightning supports profiling standard actions in the training loop out o
 - on_after_backward
 - optimizer_step
 - on_batch_end
-- training_end
+- training_step_end
 - on_training_end
 
 Enable simple profiling
--------------------------
+-----------------------
 
 If you only wish to profile the standard actions, you can set `profiler=True` when constructing
 your `Trainer` object.
@@ -98,8 +98,7 @@ to track and the profiler will record performance for code executed within this 
     from pytorch_lightning.profiler import Profiler, PassThroughProfiler
 
     class MyModel(LightningModule):
-        def __init__(self, hparams, profiler=None):
-            self.hparams = hparams
+        def __init__(self, profiler=None):
             self.profiler = profiler or PassThroughProfiler()
 
         def custom_processing_step(self, data):
@@ -108,15 +107,16 @@ to track and the profiler will record performance for code executed within this 
             return data
 
     profiler = Profiler()
-    model = MyModel(hparams, profiler)
+    model = MyModel(profiler)
     trainer = Trainer(profiler=profiler, max_epochs=1)
 
 """
 
-from .profiler import Profiler, AdvancedProfiler, PassThroughProfiler
+from pytorch_lightning.profiler.profilers import SimpleProfiler, AdvancedProfiler, PassThroughProfiler, BaseProfiler
 
 __all__ = [
-    'Profiler',
+    'BaseProfiler',
+    'SimpleProfiler',
     'AdvancedProfiler',
     'PassThroughProfiler',
 ]

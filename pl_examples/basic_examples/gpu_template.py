@@ -1,5 +1,5 @@
 """
-Runs a model on a single node across N-gpus.
+Runs a model on a single node across multiple gpus.
 """
 import os
 from argparse import ArgumentParser
@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 import pytorch_lightning as pl
-from pl_examples.basic_examples.lightning_module_template import LightningTemplateModel
+from pl_examples.models.lightning_template import LightningTemplateModel
 
 SEED = 2334
 torch.manual_seed(SEED)
@@ -23,15 +23,16 @@ def main(hparams):
     # ------------------------
     # 1 INIT LIGHTNING MODEL
     # ------------------------
-    model = LightningTemplateModel(hparams)
+    model = LightningTemplateModel(**vars(hparams))
 
     # ------------------------
     # 2 INIT TRAINER
     # ------------------------
     trainer = pl.Trainer(
+        max_epochs=hparams.epochs,
         gpus=hparams.gpus,
         distributed_backend=hparams.distributed_backend,
-        use_amp=hparams.use_16bit
+        precision=16 if hparams.use_16bit else 32,
     )
 
     # ------------------------
@@ -60,7 +61,7 @@ if __name__ == '__main__':
         '--distributed_backend',
         type=str,
         default='dp',
-        help='supports three options dp, ddp, ddp2'
+        help='supports four options dp, ddp, ddp2, ddp_spawn'
     )
     parent_parser.add_argument(
         '--use_16bit',

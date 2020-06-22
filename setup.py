@@ -20,7 +20,7 @@ import pytorch_lightning  # noqa: E402
 
 
 def load_requirements(path_dir=PATH_ROOT, comment_char='#'):
-    with open(os.path.join(path_dir, 'requirements.txt'), 'r') as file:
+    with open(os.path.join(path_dir, 'requirements', 'base.txt'), 'r') as file:
         lines = [ln.strip() for ln in file.readlines()]
     reqs = []
     for ln in lines:
@@ -30,6 +30,17 @@ def load_requirements(path_dir=PATH_ROOT, comment_char='#'):
         if ln:  # if requirement is not empty
             reqs.append(ln)
     return reqs
+
+
+def load_long_description():
+    # https://github.com/PyTorchLightning/pytorch-lightning/raw/master/docs/source/_images/lightning_module/pt_to_pl.png
+    url = os.path.join(pytorch_lightning.__homepage__, 'raw', pytorch_lightning.__version__, 'docs')
+    text = open('README.md', encoding='utf-8').read()
+    # replace relative repository path to absolute link to the release
+    text = text.replace('](docs', f']({url}')
+    # SVG images are not readable on PyPI, so replace them  with PNG
+    text = text.replace('.svg', '.png')
+    return text
 
 
 # https://packaging.python.org/discussions/install-requires-vs-requirements /
@@ -46,9 +57,9 @@ setup(
     url=pytorch_lightning.__homepage__,
     download_url='https://github.com/PyTorchLightning/pytorch-lightning',
     license=pytorch_lightning.__license__,
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['tests', 'tests/*', 'benchmarks']),
 
-    long_description=open('README.md', encoding='utf-8').read(),
+    long_description=load_long_description(),
     long_description_content_type='text/markdown',
     include_package_data=True,
     zip_safe=False,
@@ -83,5 +94,6 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
 )
